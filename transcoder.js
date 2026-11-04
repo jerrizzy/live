@@ -1,4 +1,5 @@
-import { spawn } from 'childprocess';
+import { spawn } from 'child_process';
+import { fileURLToPath } from 'url';
 import path from 'path';
 import fs from 'fs';
 
@@ -18,7 +19,7 @@ if (!fs.existsSync(outputDir)) {
 function startTranscoder() {
     // Define the input and output paths
     const inputSource = 'input.mp4';
-    const inputFlags = ['-re', 'i', inputSource];
+    const inputFlags = ['-re', '-i', inputSource];
 
     // OBS LIVE SETUP (phase 2): Swap the above flags with MediaMTX RTMP ingestion:
     // const inputSource = 'rtmp://localhost:1935/live/stream_key';
