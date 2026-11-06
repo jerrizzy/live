@@ -15,10 +15,67 @@
 
     <div class="container">
         <div class="header">
-
+            <h1>Live Streaming Dashboard</h1>
+            <p>Adaptive Bitrate HLS Player</p>
         </div>
 
-    </div> 
+        <!-- Video.js Player -->
+         <div class="video-box">
+            <video
+            id="my-live-player"
+            class="video-js vjs-theme-city vjs-big-play-centered vjs-16-9"
+            controls
+            preload="auto"
+            data-setup="{}"
+            <p class="vjs-no-js">
+                To view this video enable Javascript.
+            </p>
+            </video>
+         </div>
 
+         <!---streaming controls to mimic backend stream-key--->
+         <div class="controls">
+            <button class="btn-start" onClick="controlStream('start-stream')">Launch Stream Engine</button>
+            <button class="btn-stop" onClick="controlStream('stop-stream')">Stop Stream</button>
+         </div>
+
+         <div id="status-log" style="color: #a3a3a3; font-style: italic;">Status: Waiting for stream...</div>
+
+    </div> 
+    <!--include the main video.js Javascript library-->
+    <script src="https://zencdn.net"></script>
+
+    <script>
+        const player = videojs('my-live-player');
+        const STREAM_URL = 'http://localhost:3000/live/stream.m3u8'; 
+        
+        /**
+        * interact with Express API endoints to control FFmpeg from the front-end
+        */
+       async function controlStream(endpoint) {
+        const logBox = document.getElementById('status-log');
+        logBox.innerText = `sending request to ${endpoint}...`;
+        try {
+            const response = await fetch(`http:localhost:3000/${endpoint}`);
+            const data = await response.json();
+
+            logBox.innerText = `server response: ${data.message || data.error || 'Done'}`;
+            if (endpoint === 'start-stream') {
+                // give FFmpeg 3 secs to spin and drop structured chunks to the HLS playlist before loading the stream
+                setTimeout(() => {
+                    player.src({ src: STREAM_URL, type: 'application/x-mpegURL' });
+                    player.play();
+                    logBox.innerText = "status: connection active! Syncing stream with playback...";
+                }, 3000);
+            } else if (endpoint === 'stop-stream') {
+                player.reset();
+                logBox.innerText = "status: stream stopped. Player detached.";
+            }
+        } catch (err) {
+            logBox.innerText = `error contacting server backend API pipeline`;
+            console.error(err);
+        }
+    }
+    </script>
 </body>
 </html>
